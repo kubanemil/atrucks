@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres
+    env_file:
+      - ./envs/db.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+  api:
+    env_file:
+      - ./envs/api.env
+    build: ./api
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./api:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
+  migrations:
+    build: ./api
+    env_file:
+      - ./envs/api.env
+    depends_on:
+      - postgres
+    command: python manage.py migrate
+
+
+  parser:
+    build: ./parser
+    volumes:
+      - ./parser:/code
+    env_file:
+      - ./envs/parser.env
+    depends_on:
+      - migrations
+
+volumes:
+  postgres_data:
